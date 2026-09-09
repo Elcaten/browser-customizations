@@ -1,0 +1,42 @@
+name: Update README install links
+
+on:
+  push:
+    paths:
+      - 'userscripts/**'
+      - 'userstyles/**'
+      - 'README.md'
+      - 'scripts/update-install-links.py'
+      - '.github/workflows/update-install-links.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-install-links
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Generate install links
+        env:
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python3 scripts/update-install-links.py --repository "$REPOSITORY" --branch "$DEFAULT_BRANCH"
+      - name: Commit updated README
+        run: |
+          if git diff --quiet -- README.md; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m "docs: update install links"
+          git push

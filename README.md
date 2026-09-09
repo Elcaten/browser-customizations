@@ -53,3 +53,19 @@ These rules prevent the style from affecting unrelated websites.
 ## License
 
 [MIT](LICENSE)
+
+## Install
+
+<!-- install-links:start -->
+
+[Install Fastmail Chrome App style](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userstyles/fastmail-chrome-app.user.css)
+
+[Install Fastmail title-bar color script](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userscripts/fastmail-chrome-app.user.js)
+
+[Install Invidious Chapters script](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userscripts/invidious-chapters.user.js)
+
+[Install Invidious Custom Style](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userstyles/invidious.user.css)
+
+[Install Redlib Reddit Style](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userstyles/redlib.user.css)
+
+<!-- install-links:end -->
