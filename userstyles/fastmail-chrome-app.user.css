@@ -1,0 +1,21 @@
+/* ==UserStyle==
+@name         Fastmail Chrome App
+@namespace    github.com/Elcaten/userstyles
+@version      1.0.0
+@description  Match Fastmail's background to the native title bar and reduce header height.
+@author       Elcaten
+@updateURL    https://raw.githubusercontent.com/elcaten/userstyles/main/fastmail-chrome-app.user.css
+@downloadURL  https://raw.githubusercontent.com/elcaten/userstyles/main/fastmail-chrome-app.user.css
+==/UserStyle== */
+
+@-moz-document domain("app.fastmail.com") {
+  html {
+    /* Match the native title-bar color set by:
+       https://github.com/Elcaten/userscripts/blob/main/fastmail-chrome-app.user.js */
+    background: var(--theme-color-headerStop);
+  }
+
+  .v-PageHeader {
+    height: 42px; /* Slightly smaller header */
+  }
+}
