@@ -90,12 +90,13 @@
   }
 
   function openUrl(source) {
-    const extra = [];
-    if (CONFIG.provider) extra.push(`provider=${encodeURIComponent(CONFIG.provider)}`);
-    if (CONFIG.ide) extra.push(`ide=${encodeURIComponent(CONFIG.ide)}`);
-    const suffix = extra.length ? `&${extra.join("&")}` : "";
-    return `https://devpod.sh/open#${source}${suffix}`;
+    const params = new URLSearchParams();
+    params.set("source", source);
+    if (CONFIG.provider) params.set("provider", CONFIG.provider);
+    if (CONFIG.ide) params.set("ide", CONFIG.ide);
+    return `devpod://open?${params.toString()}`;
   }
+
 
   function findCodeButton() {
     if (CONFIG.anchorSelector) {
