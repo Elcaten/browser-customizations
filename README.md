@@ -62,6 +62,8 @@ These rules prevent the style from affecting unrelated websites.
 
 [Install Fastmail title-bar color script](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userscripts/fastmail-chrome-app.user.js)
 
+[Install GitHub Open in DevPod script](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userscripts/github-devpod-button.user.js)
+
 [Install Invidious Chapters script](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userscripts/invidious-chapters.user.js)
 
 [Install Invidious Custom Style](https://raw.githubusercontent.com/Elcaten/browser-customizations/refs/heads/main/userstyles/invidious.user.css)
