@@ -12,7 +12,7 @@
   html {
     /* Match the native title-bar color set by:
        https://github.com/Elcaten/userscripts/blob/main/fastmail-chrome-app.user.js */
-    background: var(--theme-color-headerStop);
+    background: #664752;
   }
 
   .v-PageHeader {
