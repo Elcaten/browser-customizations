@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         GitHub Open in DevPod
 // @namespace    homelab
-// @version      1.0.0
+// @version      1.1.0
 // @description  Purple DevPod button next to GitHub's Code button
 // @match        https://github.com/*
 // @run-at       document-idle
+// @inject-into  content
 // @grant        none
 // ==/UserScript==
 
@@ -19,11 +20,21 @@
     insert: "after", // "after" | "append"
     provider: "homelab", // DevPod provider name; "" to omit
     ide: "zed", // "zed" | "cursor" | "vscode" | "" to omit
+    debug: true, // set false to silence [DevPod] console logs
   };
   // -------------------
 
   const BTN_ID = "homelab-devpod-btn";
   const STYLE_ID = "homelab-devpod-style";
+  const LOG = "[DevPod]";
+
+  function log(...args) {
+    if (CONFIG.debug) console.log(LOG, ...args);
+  }
+
+  function warn(...args) {
+    if (CONFIG.debug) console.warn(LOG, ...args);
+  }
 
   function ensureStyle() {
     if (document.getElementById(STYLE_ID)) return;
@@ -69,7 +80,7 @@
     if (parts[2] === "pull" && parts[3] && /^\d+$/.test(parts[3])) {
       ref = `pull/${parts[3]}/head`;
     } else if (parts[2] === "tree" || parts[2] === "blob") {
-      ref = parts[3] || "";
+      ref = parts.slice(3).join("/") || "";
     }
 
     const source = ref
@@ -86,25 +97,23 @@
     return `https://devpod.sh/open#${source}${suffix}`;
   }
 
-  function visibleText(el) {
-    return (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
-  }
-
   function findCodeButton() {
     if (CONFIG.anchorSelector) {
       return document.querySelector(CONFIG.anchorSelector);
     }
 
-    const candidates = document.querySelectorAll(
-      'get-repo, [data-testid="code-button"], button, a, summary',
+    const matches = [];
+    document.querySelectorAll("a, button, summary").forEach((el) => {
+      const t = (el.innerText || "").replace(/\s+/g, " ").trim();
+      if (t === "Code" || t === "<> Code" || /^<>?\s*Code$/.test(t)) matches.push(el);
+    });
+
+    return (
+      matches.find((el) => el.matches("button[data-variant='primary']")) ||
+      matches.find((el) => el.tagName === "BUTTON" || el.tagName === "SUMMARY") ||
+      matches.at(-1) ||
+      null
     );
-    for (const el of candidates) {
-      const t = visibleText(el);
-      if (t === "Code" || t === "<> Code" || /^<>?\s*Code$/.test(t)) {
-        return el;
-      }
-    }
-    return null;
   }
 
   function makeButton(href) {
@@ -112,13 +121,30 @@
     a.id = BTN_ID;
     a.href = href;
     a.title = "Open in DevPod";
-    a.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.2 6.5 3.6v7.4L12 19.2 5.5 15.2V7.8L12 4.2zm-1 5.3v5l4.5-2.5L11 9.5z"/>
-      </svg>
-      DevPod
-    `;
+    a.rel = "noopener noreferrer";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "currentColor");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute(
+      "d",
+      "M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.2 6.5 3.6v7.4L12 19.2 5.5 15.2V7.8L12 4.2zm-1 5.3v5l4.5-2.5L11 9.5z",
+    );
+    svg.appendChild(path);
+    a.append(svg, document.createTextNode("DevPod"));
     return a;
+  }
+
+  function placeButton(btn, anchor) {
+    if (CONFIG.insert === "append") {
+      if (btn.parentElement !== anchor) anchor.appendChild(btn);
+      return;
+    }
+    if (btn.previousElementSibling !== anchor) {
+      anchor.insertAdjacentElement("afterend", btn);
+    }
   }
 
   function inject() {
@@ -127,33 +153,50 @@
     const existing = document.getElementById(BTN_ID);
 
     if (!repo) {
-      existing?.remove();
+      if (existing) {
+        log("not a repo page, removing button", location.pathname);
+        existing.remove();
+      }
       return;
     }
 
     const href = openUrl(repo.source);
-    if (existing) {
-      existing.href = href;
-      if (document.body.contains(existing)) return;
-    }
-
     const anchor = findCodeButton();
-    if (!anchor) return;
+    if (!anchor) {
+      if (existing) existing.remove();
+      log("repo page, but no clone Code button yet", location.pathname);
+      return;
+    }
 
     const btn = existing ?? makeButton(href);
     btn.href = href;
-
-    if (CONFIG.insert === "append") {
-      anchor.appendChild(btn);
-    } else {
-      anchor.insertAdjacentElement("afterend", btn);
-    }
+    placeButton(btn, anchor);
+    log("button placed after", anchor, "href", href);
   }
 
-  inject();
-  const mo = new MutationObserver(() => inject());
+  let scheduled = 0;
+  function scheduleInject() {
+    if (scheduled) return;
+    scheduled = requestAnimationFrame(() => {
+      scheduled = 0;
+      try {
+        inject();
+      } catch (err) {
+        warn("inject failed", err);
+      }
+    });
+  }
+
+  log("loaded", location.href);
+  try {
+    inject();
+  } catch (err) {
+    warn("initial inject failed", err);
+  }
+
+  const mo = new MutationObserver(scheduleInject);
   mo.observe(document.documentElement, { childList: true, subtree: true });
-  document.addEventListener("turbo:load", inject);
-  document.addEventListener("pjax:end", inject);
-  window.addEventListener("popstate", inject);
+  document.addEventListener("turbo:load", scheduleInject);
+  document.addEventListener("pjax:end", scheduleInject);
+  window.addEventListener("popstate", scheduleInject);
 })();
